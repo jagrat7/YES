@@ -1,8 +1,16 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 import { i, id, init, InstaQLEntity } from "@instantdb/react";
-import { Button } from "./ui/button";
 
 const APP_ID = "f71273bb-9acd-4bd8-82f7-e9346fbca877";
 
@@ -63,20 +71,33 @@ const tiers = [
 ];
 
 export function TierCards() {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedTierForConfirm, setSelectedTierForConfirm] = useState<string | null>(null);
+  
   // Query for tierSelection entities (there should be only one)
   const { isLoading, error, data } = db.useQuery({ tierSelection: {} });
 
-  // Handler to select a tier and save/update in InstantDB
+  // Handler to show confirmation dialog
   function handleTierSelection(tierId: string) {
+    setSelectedTierForConfirm(tierId);
+    setShowConfirmDialog(true);
+  }
+
+  // Handler to confirm tier selection
+  function confirmTierSelection() {
+    if (!selectedTierForConfirm) return;
+    
     const current = data?.tierSelection?.[0];
     if (current) {
       // Update existing record
-      db.transact(db.tx.tierSelection[current.id].update({ selectedTierId: tierId }));
+      db.transact(db.tx.tierSelection[current.id].update({ selectedTierId: selectedTierForConfirm }));
     } else {
       // Create new record
-      db.transact(db.tx.tierSelection[id()].update({ selectedTierId: tierId }));
+      db.transact(db.tx.tierSelection[id()].update({ selectedTierId: selectedTierForConfirm }));
     }
-    alert(`${tiers.find((t) => t.id === tierId)?.title} selected! You can now start completing challenges.`);
+    
+    setShowConfirmDialog(false);
+    setSelectedTierForConfirm(null);
   }
 
   if (isLoading) return <p>Loading tiers...</p>;
@@ -147,6 +168,33 @@ export function TierCards() {
           📝 <strong>Note:</strong> You can switch tiers anytime! Start small and work your way up to bigger challenges.
         </p>
       </div>
+      
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="rounded-3xl border-4 border-black max-w-md">
+          <DialogHeader>
+            <div className="text-6xl mb-4 text-center">🎯</div>
+            <DialogTitle className="text-2xl font-bold text-center">Confirm Tier Selection</DialogTitle>
+            <DialogDescription className="text-lg text-center">
+              Are you sure you want to select the <strong>{tiers.find(t => t.id === selectedTierForConfirm)?.title}</strong> tier?
+            </DialogDescription>
+            <div className="flex gap-4 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmDialog(false)}
+                className="flex-1 border-2 border-gray-300 rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmTierSelection}
+                className="flex-1 bg-black text-white rounded-xl hover:bg-gray-800"
+              >
+                Confirm
+              </Button>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Activity, User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -144,19 +151,13 @@ export function ActivityCompletion() {
       if (!verification.verified) {
         setVerificationMessage(verification.reason || "Challenge verification failed");
         setShowFailure(true);
-        setTimeout(() => {
-          setShowFailure(false);
-        }, 5000);
+     
         return;
       }
 
       // If verified, show success and simulate earning reward
       setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        setProof("");
-        setCrazyLevel([3]);
-        }, 3000);
+
 
     } catch (error) {
       console.error("Error completing activity:", error);
@@ -253,32 +254,32 @@ export function ActivityCompletion() {
 
   return (
     <>
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-4 border-black p-8 text-center max-w-md mx-4">
-            <div className="text-6xl mb-4">🎉</div>
-            <h3 className="text-2xl font-bold mb-2">YES! Well Done!</h3>
-            <p className="text-lg mb-4">
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="rounded-3xl border-4 border-black max-w-md">
+          <DialogHeader>
+            <div className="text-6xl mb-4 text-center">🎉</div>
+            <DialogTitle className="text-2xl font-bold text-center">YES! Well Done!</DialogTitle>
+            <DialogDescription className="text-lg text-center">
               You earned ${currentActivity?.reward}!
-            </p>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
       
-      {showFailure && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-4 border-black p-8 text-center max-w-md mx-4">
-            <div className="text-6xl mb-4">❌</div>
-            <h3 className="text-2xl font-bold mb-2">Verification Failed</h3>
-            <p className="text-lg mb-4 text-gray-700">
+      <Dialog open={showFailure} onOpenChange={setShowFailure}>
+        <DialogContent className="rounded-3xl border-4 border-black max-w-md">
+          <DialogHeader>
+            <div className="text-6xl mb-4 text-center">❌</div>
+            <DialogTitle className="text-2xl font-bold text-center">Verification Failed</DialogTitle>
+            <DialogDescription className="text-lg text-gray-700 text-center">
               {verificationMessage}
-            </p>
-            <p className="text-sm text-gray-500">
+            </DialogDescription>
+            <p className="text-sm text-gray-500 text-center mt-2">
               Please try again with better proof of completing the challenge.
             </p>
-          </div>
-        </div>
-      )}
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
       <div className="bg-white rounded-3xl border-4 border-black p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Your Current Challenge</h2>
