@@ -26,11 +26,11 @@ export function ActivityCompletion() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      
+
       // Get user's selected tier from localStorage
       const selectedTier = localStorage.getItem("selectedTier") || "unemployed";
       setUserTier(selectedTier);
-      
+
       // Set initial crazy level to middle of slider (5 out of 10)
       if (selectedTier !== "unemployed") {
         setCrazyLevel([5]);
@@ -58,7 +58,7 @@ export function ActivityCompletion() {
         const tierActivities = getFilteredActivities(activities, userTier);
         const mappedLevel = mapSliderToCrazyLevel(crazyLevel[0], userTier);
         const matchingActivities = tierActivities.filter((a) => a.crazyLevel === mappedLevel);
-        const selectedActivity = matchingActivities.length > 0 
+        const selectedActivity = matchingActivities.length > 0
           ? matchingActivities[Math.floor(Math.random() * matchingActivities.length)]
           : tierActivities[0];
         setCurrentActivity(selectedActivity);
@@ -74,11 +74,11 @@ export function ActivityCompletion() {
       const tierParam = userTier === "unemployed" ? "all" : userTier;
       console.log('Fetching activities for tier:', tierParam);
       const response = await fetch(`/api/activities?tier=${tierParam}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const fetchedActivities = await response.json();
       console.log('Fetched activities:', fetchedActivities);
       setActivities(fetchedActivities);
@@ -94,32 +94,13 @@ export function ActivityCompletion() {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/activities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          activityId: currentActivity.id,
-          proof,
-          tier: userTier === "unemployed" ? "all" : userTier,
-        }),
-      });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setProof("");
+        setCrazyLevel([3]);
+      }, 3000);
 
-      const result = await response.json();
-
-      if (result.success) {
-        // Update user balance
-        const updatedUser = { ...user, balance: user.balance + result.reward };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          fetchActivity();
-          setProof("");
-          setCrazyLevel([3]);
-        }, 3000);
-      }
     } catch (error) {
       console.error("Error completing activity:", error);
     } finally {
