@@ -28,9 +28,7 @@ YES! is a gamified life-changing app that encourages users to step out of their 
 ### **Backend & APIs**
 - 🤖 **Vercel AI SDK** - AI integration framework
 - 🧠 **OpenRouter** - Multi-model AI provider
-- 🦙 **Llama 3.1 70B** - Primary AI model for activity generation
 - 📋 **Zod** - Schema validation
-- 🔄 **Next.js API Routes** - Serverless functions
 
 ### **Database & Storage**
 - ⚡ **InstantDB** *(Coming Soon)* - Real-time database
