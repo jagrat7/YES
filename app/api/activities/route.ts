@@ -9,21 +9,82 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 })
 
-// Cache variables
-let cachedActivities: any[] | null = null
-let lastGenerated = 0
+// Simple in-memory cache for activities by tier
+let activityCache: { [tier: string]: { activities: any[], timestamp: number } } = {}
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-async function generateActivities() {
+async function generateActivities(tier: string = "all"): Promise<any[]> {
   const now = Date.now()
   
   // Return cached activities if they're still fresh
-  if (cachedActivities && (now - lastGenerated) < CACHE_DURATION) {
-    console.log('Returning cached activities')
-    return cachedActivities
+  if (activityCache[tier] && (now - activityCache[tier].timestamp) < CACHE_DURATION) {
+    console.log('Returning cached activities for tier:', tier)
+    return activityCache[tier].activities
   }
   try {
-    const { object: { activities } } = await generateObject({
+    console.log(`Generating new activities for tier: ${tier}`)
+    
+    const getTierPrompt = (tierType: string) => {
+      switch (tierType) {
+        case "easy":
+          return {
+            count: 10,
+            description: "EASY TIER (10 activities):",
+            distribution: `- 3 activities with crazyLevel: 1 (reward: $15-20)
+            - 4 activities with crazyLevel: 2 (reward: $18-23)
+            - 3 activities with crazyLevel: 3 (reward: $20-25)`,
+            difficulty: "easy",
+            examples: "Try new food, compliment stranger, take a different route home"
+          };
+        case "daredevil":
+          return {
+            count: 10,
+            description: "DAREDEVIL TIER (10 activities):",
+            distribution: `- 3 activities with crazyLevel: 4 (reward: $50-60)
+            - 4 activities with crazyLevel: 5 (reward: $55-65)
+            - 3 activities with crazyLevel: 6 (reward: $60-75)`,
+            difficulty: "daredevil",
+            examples: "Public speaking, ask someone out, start a conversation with 5 strangers"
+          };
+        case "dont-care":
+          return {
+            count: 10,
+            description: "DONT-CARE TIER (10 activities):",
+            distribution: `- 2 activities with crazyLevel: 7 (reward: $100-200)
+            - 3 activities with crazyLevel: 8 (reward: $150-300)
+            - 3 activities with crazyLevel: 9 (reward: $200-400)
+            - 2 activities with crazyLevel: 10 (reward: $300-500)`,
+            difficulty: "dont-care",
+            examples: "Quit toxic job, move to new city, start that business idea"
+          };
+        default:
+          return {
+            count: 30,
+            description: "ALL TIERS (30 activities):",
+            distribution: `**EASY TIER (10 activities):**
+            - 3 activities with crazyLevel: 1 (reward: $15-20)
+            - 4 activities with crazyLevel: 2 (reward: $18-23)
+            - 3 activities with crazyLevel: 3 (reward: $20-25)
+            
+            **DAREDEVIL TIER (10 activities):**
+            - 3 activities with crazyLevel: 4 (reward: $50-60)
+            - 4 activities with crazyLevel: 5 (reward: $55-65)
+            - 3 activities with crazyLevel: 6 (reward: $60-75)
+            
+            **DONT-CARE TIER (10 activities):**
+            - 2 activities with crazyLevel: 7 (reward: $100-200)
+            - 3 activities with crazyLevel: 8 (reward: $150-300)
+            - 3 activities with crazyLevel: 9 (reward: $200-400)
+            - 2 activities with crazyLevel: 10 (reward: $300-500)`,
+            difficulty: "mixed",
+            examples: "Mix of all difficulty levels"
+          };
+      }
+    };
+
+    const tierConfig = getTierPrompt(tier);
+    
+    const { object: activities } = await generateObject({
       model: openrouter("openai/gpt-4o"),
       schema: z.object({
         activities: z.array(
@@ -32,31 +93,33 @@ async function generateActivities() {
             title: z.string(),
             description: z.string(),
             reward: z.number(),
-            difficulty: z.enum(["unemployed", "easy", "daredevil", "dont-care"]),
+            difficulty: z.string(),
             completed: z.boolean(),
             crazyLevel: z.number().min(1).max(10),
           })
         ),
       }),
-      prompt: `Generate 12 creative "YES" challenge activities for a life-changing app. Each activity should encourage users to step out of their comfort zone and say YES to new experiences.
-            Create activities across 4 difficulty tiers:
-            - unemployed (crazyLevel 1-2): Free, safe, simple tasks with $5-10 rewards
-            - easy (crazyLevel 3-4): Low commitment, fun challenges with $15-25 rewards  
-            - daredevil (crazyLevel 5-7): Bold, exciting tasks with $50-75 rewards
-            - dont-care (crazyLevel 8-10): Extreme, life-changing challenges with $100-500 rewards
-
+      prompt: `Generate ${tierConfig.count} creative "YES" challenge activities for a life-changing app. Each activity should encourage users to step out of their comfort zone and say YES to new experiences.
+            
+            ${tierConfig.description}
+            ${tierConfig.distribution}
+            - difficulty: "${tierConfig.difficulty}"
+            - Examples: ${tierConfig.examples}
+            
             Make them fun, engaging, and progressively more adventurous. Include social challenges, personal growth tasks, creative activities, and spontaneous adventures. Each should have a clear, actionable title and motivating description.
-
-            Generate 3 activities per tier (12 total).`,
+            
+            Distribute crazyLevel evenly within the specified range.`,
     });
 
     console.log('Generated new activities:', JSON.stringify(activities, null, 2))
     
-    // Cache the generated activities
-    cachedActivities = activities
-    lastGenerated = now
+    // Cache the generated activities for this tier
+    activityCache[tier] = {
+      activities,
+      timestamp: now
+    }
     
-    return cachedActivities
+    return activities
   } catch (error) {
     console.error("Failed to generate activities:", error)
     return []
@@ -64,16 +127,19 @@ async function generateActivities() {
 }
 
 
-export async function GET() {
-  const activities = await generateActivities() 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const tier = searchParams.get('tier') || 'all'
+  
+  const activities = await generateActivities(tier) 
   return NextResponse.json(activities)
 }
 
 export async function POST(request: Request) {
-  const { activityId, proof } = await request.json()
+  const { activityId, proof, tier } = await request.json()
 
   // Get current activities and mark as completed
-  const activities = await generateActivities() 
+  const activities = await generateActivities(tier || 'all') 
   const activity = activities?.find((a) => a.id === activityId)
   if (activity) {
     activity.completed = true

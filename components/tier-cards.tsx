@@ -1,3 +1,5 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Button } from "./ui/button"
 
@@ -45,6 +47,14 @@ const tiers = [
 ]
 
 export function TierCards() {
+  const handleTierSelection = (tierId: string) => {
+    // Save selected tier to localStorage
+    localStorage.setItem("selectedTier", tierId);
+    
+    // Show a success message
+    alert(`${tiers.find(t => t.id === tierId)?.title} selected! You can now start completing challenges.`);
+  };
+
   return (
     <div className="bg-white rounded-3xl border-4 border-black p-8 mb-8">
       <div className="text-center mb-8">
@@ -94,7 +104,10 @@ export function TierCards() {
               </ul>
             </div>
             
-            <Button className="w-full p-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors duration-200">
+            <Button 
+              className="w-full p-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors duration-200"
+              onClick={() => handleTierSelection(tier.id)}
+            >
               Choose {tier.id === 'dont-care' ? 'to not care anymore' : tier.title}
             </Button>
           </Card>

@@ -12,6 +12,7 @@ import type { User as UserType } from "@/lib/types"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserType | null>(null)
+  const [selectedTier, setSelectedTier] = useState<string>("unemployed")
   const router = useRouter()
 
   useEffect(() => {
@@ -20,6 +21,12 @@ export default function ProfilePage() {
       setUser(JSON.parse(userData))
     } else {
       router.push("/auth")
+    }
+    
+    // Get selected tier from localStorage
+    const tierData = localStorage.getItem("selectedTier")
+    if (tierData) {
+      setSelectedTier(tierData)
     }
   }, [router])
 
@@ -142,10 +149,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button className="bg-yellow-600 hover:bg-yellow-700 border-2 border-black rounded-xl">
-                Upgrade Subscription
-              </Button>
-              <Button variant="outline" className="border-2 border-black rounded-xl bg-transparent">
+              <Button variant="outline" onClick={() => router.push("/tier-cards")} className="border-2 border-black rounded-xl bg-transparent">
                 Change Tier
               </Button>
               <Button variant="outline" className="border-2 border-black rounded-xl bg-transparent">
