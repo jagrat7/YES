@@ -8,6 +8,7 @@ const mockActivities = [
     reward: 5,
     difficulty: "unemployed",
     completed: false,
+    crazyLevel: 1,
   },
   {
     id: "2",
@@ -16,6 +17,7 @@ const mockActivities = [
     reward: 15,
     difficulty: "easy",
     completed: false,
+    crazyLevel: 2,
   },
   {
     id: "3",
@@ -24,6 +26,7 @@ const mockActivities = [
     reward: 50,
     difficulty: "daredevil",
     completed: false,
+    crazyLevel: 3,
   },
   {
     id: "4",
@@ -32,6 +35,7 @@ const mockActivities = [
     reward: 100,
     difficulty: "dont-care",
     completed: false,
+    crazyLevel: 4,
   },
 ]
 

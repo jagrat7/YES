@@ -6,6 +6,7 @@ export interface Activity {
   difficulty: "unemployed" | "easy" | "daredevil" | "dont-care"
   completed: boolean
   proof?: string
+  crazyLevel: number
 }
 
 export interface User {
