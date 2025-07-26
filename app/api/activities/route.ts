@@ -1,49 +1,80 @@
 import { NextResponse } from "next/server"
+import { generateObject } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
+import { z } from "zod"
 
-const mockActivities = [
-  {
-    id: "1",
-    title: "Say YES to a stranger asking for directions",
-    description: "Help someone who looks lost and take a selfie!",
-    reward: 5,
-    difficulty: "unemployed",
-    completed: false,
-  },
-  {
-    id: "2",
-    title: "Try a new food you've never eaten",
-    description: "Order something completely random from a menu",
-    reward: 15,
-    difficulty: "easy",
-    completed: false,
-  },
-  {
-    id: "3",
-    title: "Ask someone on a spontaneous adventure",
-    description: "Invite a friend to do something crazy within 2 hours",
-    reward: 50,
-    difficulty: "daredevil",
-    completed: false,
-  },
-  {
-    id: "4",
-    title: "Quit something you hate doing",
-    description: "Finally say NO to something by saying YES to change",
-    reward: 100,
-    difficulty: "dont-care",
-    completed: false,
-  },
-]
+// Configure OpenAI to use OpenRouter
+const openrouter = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+})
+const activitySchema = z.object({
+  activities: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      reward: z.number(),
+      difficulty: z.enum(["unemployed", "easy", "daredevil", "dont-care"]),
+      completed: z.boolean(),
+      crazyLevel: z.number().min(1).max(10),
+    })
+  ),
+})
+// Cache variables
+let cachedActivities: any[] | null = null
+let lastGenerated = 0
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+async function generateActivities() {
+  const now = Date.now()
+  
+  // Return cached activities if they're still fresh
+  if (cachedActivities && (now - lastGenerated) < CACHE_DURATION) {
+    console.log('Returning cached activities')
+    return cachedActivities
+  }
+  try {
+    const { object: { activities : activitySchema} } = await generateObject({
+      model: openrouter("openai/gpt-4o"),
+      schema: activitySchema,
+      prompt: `Generate 12 creative "YES" challenge activities for a life-changing app. Each activity should encourage users to step out of their comfort zone and say YES to new experiences.
+            Create activities across 4 difficulty tiers:
+            - unemployed (crazyLevel 1-2): Free, safe, simple tasks with $5-10 rewards
+            - easy (crazyLevel 3-4): Low commitment, fun challenges with $15-25 rewards  
+            - daredevil (crazyLevel 5-7): Bold, exciting tasks with $50-75 rewards
+            - dont-care (crazyLevel 8-10): Extreme, life-changing challenges with $100-500 rewards
+
+            Make them fun, engaging, and progressively more adventurous. Include social challenges, personal growth tasks, creative activities, and spontaneous adventures. Each should have a clear, actionable title and motivating description.
+
+            Generate 3 activities per tier (12 total).`,
+    });
+
+    console.log('Generated new activities:', JSON.stringify(object, null, 2))
+    
+    // Cache the generated activities
+    cachedActivities = object.activities
+    lastGenerated = now
+    
+    return cachedActivities
+  } catch (error) {
+    console.error("Failed to generate activities:", error)
+    return []
+  }
+}
+
 
 export async function GET() {
-  return NextResponse.json(mockActivities)
+  const activities = await generateActivities() as Activity[] ?? []
+  return NextResponse.json(activities)
 }
 
 export async function POST(request: Request) {
   const { activityId, proof } = await request.json()
 
-  // Mock completion logic
-  const activity = mockActivities.find((a) => a.id === activityId)
+  // Get current activities and mark as completed
+  const activities = await generateActivities() as Activity[] ?? []
+  const activity = activities.find((a) => a.id === activityId)
   if (activity) {
     activity.completed = true
     activity.proof = proof

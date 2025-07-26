@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.3.23",
     "@hookform/resolvers": "^3.9.1",
     "@orpc/client": "latest",
     "@radix-ui/react-accordion": "latest",
@@ -38,6 +39,7 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
+    "ai": "^4.3.19",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

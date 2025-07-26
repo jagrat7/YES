@@ -1,52 +1,110 @@
 import { Card } from "@/components/ui/card"
+import { Button } from "./ui/button"
 
 const tiers = [
   {
     id: "unemployed",
-    title: "unemployed tier",
-    description: "Safe & simple tasks",
-    color: "bg-blue-50 border-blue-300",
-    reward: "$5-10",
+    title: "Unemployed Tier",
+    icon: "🎲",
+    description: "We pick the craziness for you!",
+    features: ["Random challenges", "No choice in difficulty", "Surprise rewards", "Completely free!"],
+    color: "bg-gray-50 border-gray-300 hover:bg-gray-100",
+    reward: "FREE",
+    popular: false,
   },
   {
     id: "easy",
-    title: "easy $50",
-    description: "Slightly adventurous",
-    color: "bg-green-50 border-green-300",
-    reward: "$15-25",
+    title: "Easy Money",
+    icon: "💰",
+    description: "Perfect starter tier - good pay!",
+    features: ["Fun challenges", "Low commitment", "$5-15 rewards per challenge", "Most popular choice"],
+    color: "bg-green-50 border-green-300 hover:bg-green-100",
+    reward: "$30",
+    popular: true,
   },
   {
     id: "daredevil",
-    title: "daredevil",
+    title: "Daredevil",
+    icon: "🔥",
     description: "Bold & exciting",
-    color: "bg-orange-50 border-orange-300",
-    reward: "$50-75",
+    features: ["Thrilling tasks", "Higher stakes", "$25-50 rewards per challenge", "Adrenaline rush"],
+    color: "bg-orange-50 border-orange-300 hover:bg-orange-100",
+    reward: "$75",
+    popular: false,
   },
   {
     id: "dont-care",
-    title: "i dont care",
-    description: "Life-changing chaos",
-    color: "bg-red-50 border-red-300",
-    reward: "$100+",
+    title: "I Don't Care Anymore",
+    icon: "🤯",
+    description: "EXTREME TIER - Premium membership!",
+    features: ["Life-altering challenges", "$100-500 rewards per challenge", "Absolutely no limits", "For the truly fearless"],
+    color: "bg-red-100 border-red-400 hover:bg-red-200",
+    reward: "$500",
+    popular: false,
   },
 ]
 
 export function TierCards() {
   return (
     <div className="bg-white rounded-3xl border-4 border-black p-8 mb-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">Choose Your Adventure Level</h2>
+        <p className="text-gray-600">Pick the tier that matches your courage level!</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {tiers.map((tier) => (
           <Card
             key={tier.id}
-            className={`${tier.color} border-2 border-black rounded-2xl p-6 min-h-[150px] flex flex-col justify-between`}
+            className={`${tier.color} border-2 ${tier.reward === '$500' ? 'border-red-500 shadow-red-200 shadow-lg' : 'border-black'} rounded-2xl p-6 min-h-[320px] flex flex-col relative transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg`}
           >
-            <div>
-              <h3 className="font-bold text-lg mb-2">{tier.title}</h3>
-              <p className="text-sm text-gray-600 mb-2">{tier.description}</p>
+            {/* {tier.popular && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold border-2 border-black">
+                  ⭐ MOST POPULAR
+                </span>
+              </div>
+            )} */}
+            
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">{tier.icon}</div>
+              <h3 className="font-bold text-xl mb-2">{tier.title}</h3>
+              <p className="text-sm text-gray-600 mb-4">{tier.description}</p>
             </div>
-            <p className="font-bold text-green-600">{tier.reward}</p>
+            
+            <div className="text-center mb-6">
+              <div className={`text-3xl font-bold mb-1 ${
+                tier.reward === 'FREE' ? 'text-blue-600' : 'text-green-600'
+              }`}>
+                {tier.reward}
+              </div>
+              <p className="text-xs text-gray-500">
+                {tier.reward === 'FREE' ? 'no payment required' : 'per month'}
+              </p>
+            </div>
+            
+            <div className="flex-1">
+              <ul className="space-y-2 mb-6">
+                {tier.features.map((feature, index) => (
+                  <li key={index} className="flex items-center text-sm">
+                    <span className="text-green-500 mr-2">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <Button className="w-full p-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors duration-200">
+              Choose {tier.id === 'dont-care' ? 'to not care anymore' : tier.title}
+            </Button>
           </Card>
         ))}
+      </div>
+      
+      <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+        <p className="text-sm text-gray-600">
+          📝 <strong>Note:</strong> You can switch tiers anytime! Start small and work your way up to bigger challenges.
+        </p>
       </div>
     </div>
   )
