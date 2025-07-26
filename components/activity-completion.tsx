@@ -8,20 +8,17 @@ import type { Activity, User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-
 export function ActivityCompletion() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [crazyLevel, setCrazyLevel] = useState([3]);
-  const [proof, setProof] = useState("");
+  const [proof, setProof] = useState(""); // can be text or base64 image string
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const router = useRouter();
 
-
-  
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -35,7 +32,8 @@ export function ActivityCompletion() {
   useEffect(() => {
     if (activities.length > 0) {
       const level = crazyLevel[0];
-      const matchingActivity = activities.find((a) => a.crazyLevel === level) ?? activities[0];
+      const matchingActivity =
+        activities.find((a) => a.crazyLevel === level) ?? activities[0];
       setCurrentActivity(matchingActivity);
     }
   }, [crazyLevel, activities]);
@@ -46,13 +44,15 @@ export function ActivityCompletion() {
       const response = await fetch("/api/activities");
       const fetchedActivities = await response.json();
       setActivities(fetchedActivities);
-      
+
       // Find activity matching current crazy level
       const level = crazyLevel[0];
-      const matchingActivity = fetchedActivities.find((a: Activity) => a.crazyLevel === level) ?? fetchedActivities[0];
+      const matchingActivity =
+        fetchedActivities.find((a: Activity) => a.crazyLevel === level) ??
+        fetchedActivities[0];
       setCurrentActivity(matchingActivity);
     } catch (error) {
-      console.error('Failed to fetch activities:', error);
+      console.error("Failed to fetch activities:", error);
     } finally {
       setLoadingActivities(false);
     }
@@ -103,6 +103,32 @@ export function ActivityCompletion() {
     return "Destroy the thing that's ruining your life";
   };
 
+  // Handle file input change - upload image only
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      alert("Only PNG and JPEG images are allowed.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProof(reader.result as string); // set base64 image string
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle text input change - clear image proof if any
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    // If proof is currently an image, clear it before setting text
+    if (proof.startsWith("data:image/")) {
+      setProof("");
+    }
+    setProof(text);
+  };
 
   if (!user) {
     return (
@@ -142,9 +168,7 @@ export function ActivityCompletion() {
         </div>
 
         <Card className="border-2 border-black rounded-2xl p-6 mb-6">
-          <h3 className="text-xl font-bold mb-2">
-            {currentActivity.title}
-          </h3>
+          <h3 className="text-xl font-bold mb-2">{currentActivity.title}</h3>
 
           <p className="text-gray-700 mb-4">{currentActivity.description}</p>
           <div className="flex justify-between items-center">
@@ -176,10 +200,49 @@ export function ActivityCompletion() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Upload Proof / Share Your Story
+            </label>
+
+            <Textarea
+              value={proof.startsWith("data:image/") ? "" : proof}
+              onChange={handleTextChange}
+              placeholder="Tell us how it went! Upload a photo link or describe your YES moment..."
+              className="border-2 border-black rounded-xl"
+              rows={4}
+              disabled={proof.startsWith("data:image/")}
+            />
+
+            <input
+              type="file"
+              accept="image/png, image/jpeg"
+              onChange={handleFileChange}
+              className="mt-2"
+              disabled={proof && !proof.startsWith("data:image/")}
+            />
+
+            {proof.startsWith("data:image/") && (
+              <div className="mt-4">
+                <img
+                  src={proof}
+                  alt="Uploaded proof with img"
+                  className="max-h-48 rounded-xl border-2 border-black"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => setProof("")}
+                  className="mt-2"
+                >
+                  Remove Image
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="flex gap-4">
             <Button
               onClick={completeActivity}
-              disabled={loading}
+              disabled={loading || !proof || proof.length === 0}
               className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl border-2 border-black transform hover:scale-105 transition-transform"
             >
               {loading ? "Processing..." : "YES!"}
@@ -191,19 +254,6 @@ export function ActivityCompletion() {
             >
               YES!
             </Button>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Upload Proof / Share Your Story
-            </label>
-            <Textarea
-              value={proof}
-              onChange={(e) => setProof(e.target.value)}
-              placeholder="Tell us how it went! Upload a photo link or describe your YES moment..."
-              className="border-2 border-black rounded-xl"
-              rows={4}
-            />
           </div>
         </div>
       </div>
