@@ -8,19 +8,7 @@ const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
 })
-const activitySchema = z.object({
-  activities: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string(),
-      description: z.string(),
-      reward: z.number(),
-      difficulty: z.enum(["unemployed", "easy", "daredevil", "dont-care"]),
-      completed: z.boolean(),
-      crazyLevel: z.number().min(1).max(10),
-    })
-  ),
-})
+
 // Cache variables
 let cachedActivities: any[] | null = null
 let lastGenerated = 0
@@ -35,9 +23,21 @@ async function generateActivities() {
     return cachedActivities
   }
   try {
-    const { object: { activities : activitySchema} } = await generateObject({
+    const { object: { activities } } = await generateObject({
       model: openrouter("openai/gpt-4o"),
-      schema: activitySchema,
+      schema: z.object({
+        activities: z.array(
+          z.object({
+            id: z.string(),
+            title: z.string(),
+            description: z.string(),
+            reward: z.number(),
+            difficulty: z.enum(["unemployed", "easy", "daredevil", "dont-care"]),
+            completed: z.boolean(),
+            crazyLevel: z.number().min(1).max(10),
+          })
+        ),
+      }),
       prompt: `Generate 12 creative "YES" challenge activities for a life-changing app. Each activity should encourage users to step out of their comfort zone and say YES to new experiences.
             Create activities across 4 difficulty tiers:
             - unemployed (crazyLevel 1-2): Free, safe, simple tasks with $5-10 rewards
@@ -50,10 +50,10 @@ async function generateActivities() {
             Generate 3 activities per tier (12 total).`,
     });
 
-    console.log('Generated new activities:', JSON.stringify(object, null, 2))
+    console.log('Generated new activities:', JSON.stringify(activities, null, 2))
     
     // Cache the generated activities
-    cachedActivities = object.activities
+    cachedActivities = activities
     lastGenerated = now
     
     return cachedActivities
@@ -65,7 +65,7 @@ async function generateActivities() {
 
 
 export async function GET() {
-  const activities = await generateActivities() as Activity[] ?? []
+  const activities = await generateActivities() 
   return NextResponse.json(activities)
 }
 
@@ -73,8 +73,8 @@ export async function POST(request: Request) {
   const { activityId, proof } = await request.json()
 
   // Get current activities and mark as completed
-  const activities = await generateActivities() as Activity[] ?? []
-  const activity = activities.find((a) => a.id === activityId)
+  const activities = await generateActivities() 
+  const activity = activities?.find((a) => a.id === activityId)
   if (activity) {
     activity.completed = true
     activity.proof = proof

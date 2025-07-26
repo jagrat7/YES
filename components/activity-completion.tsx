@@ -8,52 +8,16 @@ import type { Activity, User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const mockActivities: Activity[] = [
-  {
-    id: "1",
-    title: "Say YES to a stranger asking for directions",
-    description: "Help someone who looks lost and take a selfie!",
-    reward: 5,
-    difficulty: "unemployed",
-    completed: false,
-    crazyLevel: 1,
-  },
-  {
-    id: "2",
-    title: "Try a new food you've never eaten",
-    description: "Order something completely random from a menu",
-    reward: 15,
-    difficulty: "easy",
-    completed: false,
-    crazyLevel: 2,
-  },
-  {
-    id: "3",
-    title: "Ask someone on a spontaneous adventure",
-    description: "Invite a friend to do something crazy within 2 hours",
-    reward: 50,
-    difficulty: "daredevil",
-    completed: false,
-    crazyLevel: 3,
-  },
-  {
-    id: "4",
-    title: "Quit something you hate doing",
-    description: "Finally say NO to something by saying YES to change",
-    reward: 100,
-    difficulty: "dont-care",
-    completed: false,
-    crazyLevel: 4,
-  },
-];
 
 export function ActivityCompletion() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [crazyLevel, setCrazyLevel] = useState([3]);
   const [proof, setProof] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [loadingActivities, setLoadingActivities] = useState(true);
   const router = useRouter();
 
 
@@ -68,23 +32,30 @@ export function ActivityCompletion() {
     }
   }, [router]);
 
-    useEffect(() => {
-    const level = crazyLevel[0];
-    const matchingActivity =
-      mockActivities.find((a) => a.crazyLevel === level) ?? null;
-    setCurrentActivity(matchingActivity);
-  }, [crazyLevel]);
+  useEffect(() => {
+    if (activities.length > 0) {
+      const level = crazyLevel[0];
+      const matchingActivity = activities.find((a) => a.crazyLevel === level) ?? activities[0];
+      setCurrentActivity(matchingActivity);
+    }
+  }, [crazyLevel, activities]);
 
   const fetchActivity = async () => {
-    const response = await fetch("/api/activities");
-    const activities = await response.json();
-    const randomActivity =
-      activities[Math.floor(Math.random() * activities.length)];
-    setCurrentActivity(randomActivity);
-    // Automatically set the slider to match the activity's crazyLevel
-    // if (randomActivity?.crazyLevel) {
-    //   setCrazyLevel([randomActivity.crazyLevel]);
-    // }
+    try {
+      setLoadingActivities(true);
+      const response = await fetch("/api/activities");
+      const fetchedActivities = await response.json();
+      setActivities(fetchedActivities);
+      
+      // Find activity matching current crazy level
+      const level = crazyLevel[0];
+      const matchingActivity = fetchedActivities.find((a: Activity) => a.crazyLevel === level) ?? fetchedActivities[0];
+      setCurrentActivity(matchingActivity);
+    } catch (error) {
+      console.error('Failed to fetch activities:', error);
+    } finally {
+      setLoadingActivities(false);
+    }
   };
 
   const completeActivity = async () => {
@@ -139,7 +110,7 @@ export function ActivityCompletion() {
     );
   }
 
-  if (!currentActivity) {
+  if (loadingActivities || !currentActivity) {
     return (
       <div className="text-center">Loading your next YES adventure...</div>
     );
