@@ -14,6 +14,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.9.1(react-hook-form@7.61.1(react@19.0.0))
+      '@instantdb/react':
+        specifier: ^0.20.12
+        version: 0.20.12(react@19.0.0)
       '@orpc/client':
         specifier: latest
         version: 1.7.5
@@ -355,6 +358,14 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
+
+  '@instantdb/core@0.20.12':
+    resolution: {integrity: sha512-Mz0sAqElarKCsJxWRVhzrXEy6P9QrNQ1HQqYVVDuE/hYzj+ms9k2nPH82OFdyCpOzUC4VnuDyFRZCnCZQTMBzQ==}
+
+  '@instantdb/react@0.20.12':
+    resolution: {integrity: sha512-gOosibMmNleJbWfVsRx5BUyrxe84MtQneT+OYcTV5QkSAWpJza9uumjsFbQ1wpTTUMZE7YnWfovGTAzRISwk6Q==}
+    peerDependencies:
+      react: '>=16'
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1528,6 +1539,10 @@ packages:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
+  mutative@1.2.0:
+    resolution: {integrity: sha512-1muFw45Lwjso6TSBGiXfbjKS01fVSD/qaqBfTo/gXgp79e8KM4Sa1XP/S4iN2/DvSdIZgjFJI+JIhC7eKf3GTg==}
+    engines: {node: '>=14.0'}
+
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
@@ -1943,6 +1958,10 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
   vaul@1.1.2:
     resolution: {integrity: sha512-ZFkClGpWyI2WUQjdLJ/BaGuV6AVQiJ3uELGk3OYtP+B6yCO7Cmn9vPFXVJkRaGkOJu3m8bQMgtyzNHixULceQA==}
     peerDependencies:
@@ -2118,6 +2137,16 @@ snapshots:
 
   '@img/sharp-win32-x64@0.33.5':
     optional: true
+
+  '@instantdb/core@0.20.12':
+    dependencies:
+      mutative: 1.2.0
+      uuid: 11.1.0
+
+  '@instantdb/react@0.20.12(react@19.0.0)':
+    dependencies:
+      '@instantdb/core': 0.20.12
+      react: 19.0.0
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -3291,6 +3320,8 @@ snapshots:
 
   minipass@7.1.2: {}
 
+  mutative@1.2.0: {}
+
   mz@2.7.0:
     dependencies:
       any-promise: 1.3.0
@@ -3699,6 +3730,8 @@ snapshots:
       react: 19.0.0
 
   util-deprecate@1.0.2: {}
+
+  uuid@11.1.0: {}
 
   vaul@1.1.2(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:

@@ -7,6 +7,19 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Activity, User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { i, id, init, InstaQLEntity } from "@instantdb/react";
+
+const APP_ID = "f71273bb-9acd-4bd8-82f7-e9346fbca877";
+
+const schema = i.schema({
+  entities: {
+    tierSelection: i.entity({
+      selectedTierId: i.string(),
+    }),
+  },
+});
+
+const db = init({ appId: APP_ID, schema });
 
 export function ActivityCompletion() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
@@ -22,7 +35,13 @@ export function ActivityCompletion() {
   const [verificationMessage, setVerificationMessage] = useState("");
   const [loadingActivities, setLoadingActivities] = useState(true);
   const router = useRouter();
+  const { isLoading, error, data } = db.useQuery({ "tierSelection": {
+    "$": {
+      "limit": 1
+    }
+  } });
 
+  console.log(data?.tierSelection?.[0]?.selectedTierId);
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -30,7 +49,7 @@ export function ActivityCompletion() {
       setUser(parsedUser);
 
       // Get user's selected tier from localStorage
-      const selectedTier = localStorage.getItem("selectedTier") || "unemployed";
+      const selectedTier = data?.tierSelection?.[0]?.selectedTierId || "unemployed";
       setUserTier(selectedTier);
 
       // Set initial crazy level to middle of slider (5 out of 10)
