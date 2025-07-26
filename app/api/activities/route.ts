@@ -9,18 +9,8 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 })
 
-// Simple in-memory cache for activities by tier
-let activityCache: { [tier: string]: { activities: any[], timestamp: number } } = {}
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function generateActivities(tier: string = "all"): Promise<any[]> {
-  const now = Date.now()
-  
-  // Return cached activities if they're still fresh
-  if (activityCache[tier] && (now - activityCache[tier].timestamp) < CACHE_DURATION) {
-    console.log('Returning cached activities for tier:', tier)
-    return activityCache[tier].activities
-  }
   try {
     console.log(`Generating new activities for tier: ${tier}`)
     
@@ -84,7 +74,7 @@ async function generateActivities(tier: string = "all"): Promise<any[]> {
 
     const tierConfig = getTierPrompt(tier);
     
-    const { object: activities } = await generateObject({
+    const { object } = await generateObject({
       model: openrouter("openai/gpt-4o"),
       schema: z.object({
         activities: z.array(
@@ -111,15 +101,10 @@ async function generateActivities(tier: string = "all"): Promise<any[]> {
             Distribute crazyLevel evenly within the specified range.`,
     });
 
+    const activities = object.activities
     console.log('Generated new activities:', JSON.stringify(activities, null, 2))
-    
-    // Cache the generated activities for this tier
-    activityCache[tier] = {
-      activities,
-      timestamp: now
-    }
-    
     return activities
+    
   } catch (error) {
     console.error("Failed to generate activities:", error)
     return []
@@ -128,11 +113,18 @@ async function generateActivities(tier: string = "all"): Promise<any[]> {
 
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const tier = searchParams.get('tier') || 'all'
-  
-  const activities = await generateActivities(tier) 
-  return NextResponse.json(activities)
+  try {
+    const { searchParams } = new URL(request.url)
+    const tier = searchParams.get('tier') || 'all'
+    console.log('API GET called with tier:', tier)
+    
+    const activities = await generateActivities(tier)
+    console.log('API returning activities count:', activities.length)
+    return NextResponse.json(activities)
+  } catch (error) {
+    console.error('API GET error:', error)
+    return NextResponse.json({ error: 'Failed to generate activities' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {

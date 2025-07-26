@@ -38,12 +38,17 @@ export function ActivityCompletion() {
       if (selectedTier !== "unemployed") {
         setCrazyLevel([5]);
       }
-      
-      fetchActivity();
     } else {
       router.push("/auth");
     }
   }, [router]);
+
+  // Fetch activities when userTier changes
+  useEffect(() => {
+    if (userTier) {
+      fetchActivity();
+    }
+  }, [userTier]);
 
   useEffect(() => {
     if (activities.length > 0) {
@@ -68,9 +73,17 @@ export function ActivityCompletion() {
     try {
       setLoadingActivities(true);
       // Pass user's tier to get tier-specific activities
+      console.log('Current userTier:', userTier);
       const tierParam = userTier === "unemployed" ? "all" : userTier;
+      console.log('Fetching activities for tier:', tierParam);
       const response = await fetch(`/api/activities?tier=${tierParam}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const fetchedActivities = await response.json();
+      console.log('Fetched activities:', fetchedActivities);
       setActivities(fetchedActivities);
     } catch (error) {
       console.error('Failed to fetch activities:', error);
