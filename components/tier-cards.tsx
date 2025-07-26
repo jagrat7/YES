@@ -1,7 +1,23 @@
-"use client"
+"use client";
 
-import { Card } from "@/components/ui/card"
-import { Button } from "./ui/button"
+import { Card } from "@/components/ui/card";
+import { i, id, init, InstaQLEntity } from "@instantdb/react";
+import { Button } from "./ui/button";
+
+const APP_ID = "f71273bb-9acd-4bd8-82f7-e9346fbca877";
+
+const schema = i.schema({
+  entities: {
+    tierSelection: i.entity({
+      selectedTierId: i.string(),
+    }),
+  },
+});
+
+type TierSelection = InstaQLEntity<typeof schema, "tierSelection">;
+
+const db = init({ appId: APP_ID, schema });
+const room = db.room("tierSelection");
 
 const tiers = [
   {
@@ -44,16 +60,30 @@ const tiers = [
     reward: "$500",
     popular: false,
   },
-]
+];
 
 export function TierCards() {
-  const handleTierSelection = (tierId: string) => {
-    // Save selected tier to localStorage
-    localStorage.setItem("selectedTier", tierId);
-    
-    // Show a success message
-    alert(`${tiers.find(t => t.id === tierId)?.title} selected! You can now start completing challenges.`);
-  };
+  // Query for tierSelection entities (there should be only one)
+  const { isLoading, error, data } = db.useQuery({ tierSelection: {} });
+
+  // Handler to select a tier and save/update in InstantDB
+  function handleTierSelection(tierId: string) {
+    const current = data?.tierSelection?.[0];
+    if (current) {
+      // Update existing record
+      db.transact(db.tx.tierSelection[current.id].update({ selectedTierId: tierId }));
+    } else {
+      // Create new record
+      db.transact(db.tx.tierSelection[id()].update({ selectedTierId: tierId }));
+    }
+    alert(`${tiers.find((t) => t.id === tierId)?.title} selected! You can now start completing challenges.`);
+  }
+
+  if (isLoading) return <p>Loading tiers...</p>;
+  if (error) return <p className="text-red-500">Error: {error.message}</p>;
+
+  // Get selectedTierId from data (first entity)
+  const selectedTierId = data?.tierSelection?.[0]?.selectedTierId;
 
   return (
     <div className="bg-white rounded-3xl border-4 border-black p-8 mb-8">
@@ -61,38 +91,36 @@ export function TierCards() {
         <h2 className="text-3xl font-bold mb-2">Choose Your Adventure Level</h2>
         <p className="text-gray-600">Pick the tier that matches your courage level!</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {tiers.map((tier) => (
           <Card
             key={tier.id}
-            className={`${tier.color} border-2 ${tier.reward === '$500' ? 'border-red-500 shadow-red-200 shadow-lg' : 'border-black'} rounded-2xl p-6 min-h-[320px] flex flex-col relative transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg`}
+            className={`${tier.color} border-2 ${
+              tier.reward === "$500" ? "border-red-500 shadow-red-200 shadow-lg" : "border-black"
+            } rounded-2xl p-6 min-h-[320px] flex flex-col relative transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg ${
+              selectedTierId === tier.id ? "ring-4 ring-black" : ""
+            }`}
           >
-            {/* {tier.popular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold border-2 border-black">
-                  ⭐ MOST POPULAR
-                </span>
-              </div>
-            )} */}
-            
             <div className="text-center mb-4">
               <div className="text-4xl mb-2">{tier.icon}</div>
               <h3 className="font-bold text-xl mb-2">{tier.title}</h3>
               <p className="text-sm text-gray-600 mb-4">{tier.description}</p>
             </div>
-            
+
             <div className="text-center mb-6">
-              <div className={`text-3xl font-bold mb-1 ${
-                tier.reward === 'FREE' ? 'text-blue-600' : 'text-green-600'
-              }`}>
+              <div
+                className={`text-3xl font-bold mb-1 ${
+                  tier.reward === "FREE" ? "text-blue-600" : "text-green-600"
+                }`}
+              >
                 {tier.reward}
               </div>
               <p className="text-xs text-gray-500">
-                {tier.reward === 'FREE' ? 'no payment required' : 'per month'}
+                {tier.reward === "FREE" ? "no payment required" : "per month"}
               </p>
             </div>
-            
+
             <div className="flex-1">
               <ul className="space-y-2 mb-6">
                 {tier.features.map((feature, index) => (
@@ -103,22 +131,22 @@ export function TierCards() {
                 ))}
               </ul>
             </div>
-            
-            <Button 
+
+            <Button
               className="w-full p-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors duration-200"
               onClick={() => handleTierSelection(tier.id)}
             >
-              Choose {tier.id === 'dont-care' ? 'to not care anymore' : tier.title}
+              Choose {tier.id === "dont-care" ? "to not care anymore" : tier.title}
             </Button>
           </Card>
         ))}
       </div>
-      
+
       <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
         <p className="text-sm text-gray-600">
           📝 <strong>Note:</strong> You can switch tiers anytime! Start small and work your way up to bigger challenges.
         </p>
       </div>
     </div>
-  )
+  );
 }
