@@ -18,6 +18,8 @@ export function ActivityCompletion() {
   const [proof, setProof] = useState(""); // can be text or base64 image string
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showFailure, setShowFailure] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
   const [loadingActivities, setLoadingActivities] = useState(true);
   const router = useRouter();
 
@@ -94,15 +96,52 @@ export function ActivityCompletion() {
 
     setLoading(true);
     try {
+      // First verify the proof (image or text)
+      const verificationResponse = await fetch("/api/verify-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: proof.startsWith("data:image/") ? proof : null,
+          activityTitle: currentActivity.title,
+          activityDescription: currentActivity.description,
+          proof: proof.startsWith("data:image/") ? "" : proof,
+          // Send complete challenge data for better verification
+          challenge: {
+            id: currentActivity.id,
+            title: currentActivity.title,
+            description: currentActivity.description,
+            crazyLevel: currentActivity.crazyLevel,
+            difficulty: currentActivity.difficulty,
+            reward: currentActivity.reward,
+          },
+          userTier,
+          crazyLevel: crazyLevel[0],
+        }),
+      });
+
+      const verification = await verificationResponse.json();
+      console.log('🔍 Verification result:', verification);
+
+      if (!verification.verified) {
+        setVerificationMessage(verification.reason || "Challenge verification failed");
+        setShowFailure(true);
+        setTimeout(() => {
+          setShowFailure(false);
+        }, 5000);
+        return;
+      }
+
+      // If verified, show success and simulate earning reward
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         setProof("");
         setCrazyLevel([3]);
-      }, 3000);
+        }, 3000);
 
     } catch (error) {
       console.error("Error completing activity:", error);
+      alert("❌ Failed to complete activity. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -203,8 +242,20 @@ export function ActivityCompletion() {
             <p className="text-lg mb-4">
               You earned ${currentActivity?.reward}!
             </p>
-            <p className="text-sm text-gray-600">
-              Getting your next challenge...
+          </div>
+        </div>
+      )}
+      
+      {showFailure && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl border-4 border-black p-8 text-center max-w-md mx-4">
+            <div className="text-6xl mb-4">❌</div>
+            <h3 className="text-2xl font-bold mb-2">Verification Failed</h3>
+            <p className="text-lg mb-4 text-gray-700">
+              {verificationMessage}
+            </p>
+            <p className="text-sm text-gray-500">
+              Please try again with better proof of completing the challenge.
             </p>
           </div>
         </div>
@@ -295,7 +346,6 @@ export function ActivityCompletion() {
               accept="image/png, image/jpeg"
               onChange={handleFileChange}
               className="mt-2"
-              disabled={proof && !proof.startsWith("data:image/")}
             />
 
             {proof.startsWith("data:image/") && (
