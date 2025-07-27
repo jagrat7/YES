@@ -85,7 +85,3 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 
 MIT License - feel free to use this project for your own life-changing adventures!
 
----
-
-**Ready to say YES to a better life?** 🌟 Start your journey today!
-
