@@ -1,4 +1,4 @@
-# 🎯 YES! - Life-Changing Challenge App - Silly hackathon submission 
+# 🎯 YES! - Silly hackathon submission 
 
 > **Say YES to new experiences and transform your life, one challenge at a time!** 🚀 vibe
 
