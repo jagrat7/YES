@@ -26,7 +26,7 @@ export default function ProfilePage() {
         name: "Guest User",
         email: "guest@example.com",
         balance: 0,
-        tier: "unemployed" as const,
+        tier: "easy" as const,
         subscription: false,
       }
       localStorage.setItem("user", JSON.stringify(defaultUser))

@@ -31,9 +31,8 @@ const db = init({ appId: APP_ID, schema });
 export function ActivityCompletion() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [tierActivities, setTierActivities] = useState<Activity[]>([]);
   const [user, setUser] = useState<User | null>(null);
-  const [userTier, setUserTier] = useState<string>("unemployed");
+  const [userTier, setUserTier] = useState<string>("easy");
   const [crazyLevel, setCrazyLevel] = useState([3]);
   const [proof, setProof] = useState(""); // can be text or base64 image string
   const [loading, setLoading] = useState(false);
@@ -61,7 +60,7 @@ export function ActivityCompletion() {
         name: "Guest User",
         email: "guest@example.com",
         balance: 0,
-        tier: "unemployed" as const,
+        tier: "easy" as const,
         subscription: false,
       };
       localStorage.setItem("user", JSON.stringify(defaultUser));
@@ -69,7 +68,7 @@ export function ActivityCompletion() {
     }
 
     // Get user's selected tier from localStorage
-    const selectedTier = data?.tierSelection?.[0]?.selectedTierId || "unemployed";
+    const selectedTier = data?.tierSelection?.[0]?.selectedTierId || "easy";
     setUserTier(selectedTier);
 
     // Set initial crazy level to middle of slider (5 out of 10)
@@ -103,6 +102,14 @@ export function ActivityCompletion() {
       }
     }
   }, [crazyLevel, activities, userTier]);
+
+  // Safety useEffect to ensure we always try to get an activity if we don't have one
+  useEffect(() => {
+    if (!loadingActivities && !currentActivity && activities.length === 0 && userTier) {
+      console.log('No activities found, retrying fetch...');
+      fetchActivity();
+    }
+  }, [loadingActivities, currentActivity, activities.length, userTier]);
 
   const fetchActivity = async () => {
     try {
@@ -256,9 +263,25 @@ export function ActivityCompletion() {
     );
   }
 
-  if (loadingActivities || !currentActivity) {
+  // Show loading only if we're actually loading activities AND don't have any current activity yet
+  if (loadingActivities && !currentActivity) {
     return (
       <div className="text-center">Loading your next YES adventure...</div>
+    );
+  }
+
+  // If we're not loading but still don't have an activity, something went wrong
+  if (!currentActivity) {
+    return (
+      <div className="text-center">
+        <p>No activities available. Please try refreshing the page.</p>
+        <button 
+          onClick={() => fetchActivity()} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 
