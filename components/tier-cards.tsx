@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { i, id, init, InstaQLEntity } from "@instantdb/react";
 
 const APP_ID = "f71273bb-9acd-4bd8-82f7-e9346fbca877";
@@ -73,6 +74,7 @@ const tiers = [
 export function TierCards() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedTierForConfirm, setSelectedTierForConfirm] = useState<string | null>(null);
+  const router = useRouter();
   
   // Query for tierSelection entities (there should be only one)
   const { isLoading, error, data } = db.useQuery({ tierSelection: {} });
@@ -98,6 +100,9 @@ export function TierCards() {
     
     setShowConfirmDialog(false);
     setSelectedTierForConfirm(null);
+    
+    // Redirect to challenge page
+    router.push('/challenge');
   }
 
   if (isLoading) return <p>Loading tiers...</p>;
@@ -187,9 +192,9 @@ export function TierCards() {
               </Button>
               <Button 
                 onClick={confirmTierSelection}
-                className="flex-1 bg-black text-white rounded-xl hover:bg-gray-800"
+                className="flex-1 bg-green-500 text-white rounded-xl hover:bg-green-600 font-bold"
               >
-                Confirm
+                YES! Start My Challenges →
               </Button>
             </div>
           </DialogHeader>

@@ -20,7 +20,17 @@ export default function ProfilePage() {
     if (userData) {
       setUser(JSON.parse(userData))
     } else {
-      router.push("/auth")
+      // Create default guest user if none exists
+      const defaultUser = {
+        id: "guest",
+        name: "Guest User",
+        email: "guest@example.com",
+        balance: 0,
+        tier: "unemployed" as const,
+        subscription: false,
+      }
+      localStorage.setItem("user", JSON.stringify(defaultUser))
+      setUser(defaultUser)
     }
     
     // Get selected tier from localStorage
@@ -32,7 +42,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem("user")
-    router.push("/auth")
+    router.push("/")
   }
 
   const getTierColor = (tier: string) => {

@@ -54,19 +54,29 @@ export function ActivityCompletion() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-
-      // Get user's selected tier from localStorage
-      const selectedTier = data?.tierSelection?.[0]?.selectedTierId || "unemployed";
-      setUserTier(selectedTier);
-
-      // Set initial crazy level to middle of slider (5 out of 10)
-      if (selectedTier !== "unemployed") {
-        setCrazyLevel([5]);
-      }
     } else {
-      router.push("/auth");
+      // Create default guest user if none exists
+      const defaultUser = {
+        id: "guest",
+        name: "Guest User",
+        email: "guest@example.com",
+        balance: 0,
+        tier: "unemployed" as const,
+        subscription: false,
+      };
+      localStorage.setItem("user", JSON.stringify(defaultUser));
+      setUser(defaultUser);
     }
-  }, [router]);
+
+    // Get user's selected tier from localStorage
+    const selectedTier = data?.tierSelection?.[0]?.selectedTierId || "unemployed";
+    setUserTier(selectedTier);
+
+    // Set initial crazy level to middle of slider (5 out of 10)
+    if (selectedTier !== "unemployed") {
+      setCrazyLevel([5]);
+    }
+  }, [data?.tierSelection, router]);
 
   // Fetch activities when userTier changes
   useEffect(() => {
@@ -289,17 +299,21 @@ export function ActivityCompletion() {
           </div>
         </div>
 
-        <Card className="border-2 border-black rounded-2xl p-6 mb-6">
-          <h3 className="text-xl font-bold mb-2">{currentActivity.title}</h3>
-
-          <p className="text-gray-700 mb-4">{currentActivity.description}</p>
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-medium">
-              Reward: ${currentActivity.reward}
-            </span>
-            <span className="px-3 py-1 bg-blue-100 rounded-full text-sm font-medium">
-              {currentActivity.difficulty}
-            </span>
+        <Card className="border-2 border-black rounded-2xl mb-6 relative overflow-hidden h-[400px] flex flex-col" style={{ backgroundImage: `url(/${currentActivity.id.length % 2 === 0 ? 's2' : 's3'}.gif)`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }}>
+          <div className="absolute inset-0 bg-white bg-opacity-90 rounded-2xl"></div>
+          <div className="relative z-10 p-8 h-full flex flex-col justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">{currentActivity.title}</h3>
+              <p className="text-gray-700 mb-4">{currentActivity.description}</p>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-medium">
+                Reward: <span className="text-green-600">${currentActivity.reward}</span>
+              </span>
+              <span className="px-3 py-1 bg-blue-100 rounded-full text-sm font-medium text-blue-800">
+                {currentActivity.difficulty}
+              </span>
+            </div>
           </div>
         </Card>
 
