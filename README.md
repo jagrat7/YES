@@ -1,6 +1,6 @@
-# 🎯 YES! - Life-Changing Challenge App
+# 🎯 YES! - Silly hackathon submission 
 
-> **Say YES to new experiences and transform your life, one challenge at a time!** 🚀
+> **Say YES to new experiences and transform your life, one challenge at a time!** 🚀 vibe
 
 ## 📱 What is YES!
 
@@ -84,8 +84,4 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 ## 📄 License
 
 MIT License - feel free to use this project for your own life-changing adventures!
-
----
-
-**Ready to say YES to a better life?** 🌟 Start your journey today!
 
