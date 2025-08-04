@@ -349,17 +349,17 @@ export function ActivityCompletion() {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Upload Proof / Share Your Story
+              Upload Proof
             </label>
 
-            <Textarea
+            {/* <Textarea
               value={proof.startsWith("data:image/") ? "" : proof}
               onChange={handleTextChange}
               placeholder="Tell us how it went! Upload a photo link or describe your YES moment..."
               className="border-2 border-black rounded-xl"
               rows={4}
               disabled={proof.startsWith("data:image/")}
-            />
+            /> */}
 
             <input
               type="file"
